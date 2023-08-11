@@ -1,0 +1,109 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: JuicePlus PDF Generator
+  description: Create PDF files from Templates
+  license:
+    name: Proprietary
+  contact:
+    name: Scott Carr
+    email: scott.carr@juiceplus.com
+servers:
+  - url: /pdfgenerator
+security:
+  - bearerAuth: []
+tags:
+  - name: PDF
+    description: "PDF Generator Endpoints"
+paths:
+  /pdf:
+    post:
+      summary: Request a PDF to be generated with a template
+      description: |
+         Create a PDF based on fields and a template
+      operationId: postPDFGenerator
+      tags:
+        - PDF
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PdfRequest"
+              examples:
+                  sepaReport:
+                      value:
+                          reportName: "SEPA"
+                          accountField: "This Test"
+                          debtors: "My Name"
+                          country: "France"
+                          IBAN: "IBN12341234"
+                          bic: "BICNUMB"
+                  sepaWithTokens:
+                      value:
+                          reportName: "SEPA"
+                          accountField: "This Test"
+                          debtors: "My Name"
+                          country: "France"
+                          IBAN: "IBN12341234"
+                          bic: "BICNUMB"
+                      
+      responses:
+        '200':
+          description: The tokenId used to request this information
+          content:
+            application/pdf:    
+              schema:
+                type: file
+            text/plain:
+              schema:
+                type: string
+        '403':
+            description: Authorization Failed
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/Error"
+                text/plain:
+                    schema:
+                       type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+            text/plain:
+              schema:
+                type: string
+
+components:
+  schemas:
+    PdfRequest:
+      type: object
+      description: |
+         Various fields are sent based on the reportName being requested.  Reports can have 
+         required fields when requested.
+      required:
+         - reportName
+      properties:
+        reportName:
+          type: string
+          description: The Report Template to use for the PDF Request
+    
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+  
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
